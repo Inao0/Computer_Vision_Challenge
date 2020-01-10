@@ -184,7 +184,7 @@ void callibration_on_mouse(int event, int x, int y, int flags, void* userData)
 		double dist = getDistance(pre_pt, cur_pt);
 		//circle(src, cur_pt, 3, cvScalar(255, 0, 0), CV_FILLED, CV_AA, 0);
 		line(src, pre_pt, cur_pt, cvScalar(0, 255, 0), 1, CV_AA, 0);
-		putText(src, validation_message, CvPoint(50,50), FONT_HERSHEY_SIMPLEX, 0.4, CvScalar(0, 255, 0));
+		putText(src, validation_message, CvPoint(50,50), FONT_HERSHEY_DUPLEX, 0.6, CvScalar(0, 255, 0));
 		imshow("Calibration", src);
 	}
 	*((double*)userData) = getDistance(pre_pt, cur_pt);
