@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 using namespace cv;
-Mat src;
+
 Mat dst;
 void callibration_on_mouse(int event, int x, int y, int flags, void* ustc);
 void on_mouse_measurements(int event, int x, int y, int flags, void* ustc);
@@ -13,6 +13,7 @@ int main(int argc, char** argv)
 	double ratio = 1; //mm/pixel
 	const std::string mainWindowName = "Live Camera";
 	const std::string callibrationWindowName = "Calibration";
+	const std::string measuerementWindowName = "Measurements";
 
 	cv::namedWindow(mainWindowName, cv::WINDOW_AUTOSIZE);
 
@@ -45,9 +46,10 @@ int main(int argc, char** argv)
 		int font = CV_FONT_HERSHEY_SIMPLEX;
 		cv::putText(img, "Press q for quit", CvPoint(10, 300), font, 0.5, CvScalar(255, 255, 255));
 		cv::putText(img, "Press c for callibrating", CvPoint(10, 320), font, 0.5, CvScalar(255, 255, 255));
+		cv::putText(img, "Press m for measuring", CvPoint(10, 340), font, 0.5, CvScalar(255, 255, 255));
 
 		cv::imshow(mainWindowName, img);
-		setMouseCallback(mainWindowName, on_mouse_measurements,&ratio);
+		//setMouseCallback(mainWindowName, on_mouse_measurements,&ratio);
 
 		if ((key=cv::waitKey(30)) >= 0)
 		{
@@ -77,6 +79,13 @@ int main(int argc, char** argv)
 					destroyWindow(callibrationWindowName);
 				}
 				break;
+			case 'm':
+				std::cout << " m has been pressed \n";
+				frame.copyTo(dst);
+				cv::imshow(measuerementWindowName, frame);
+				setMouseCallback(measuerementWindowName, on_mouse_measurements, &ratio);
+				break;
+
 			default:
 				break;
 			}
@@ -89,6 +98,7 @@ int main(int argc, char** argv)
 
 void callibration_on_mouse(int event, int x, int y, int flags, void* userData)
 {
+	Mat src;
 	static Point pre_pt;
 	static Point cur_pt;
 	char temp_1[20];
@@ -126,8 +136,9 @@ void callibration_on_mouse(int event, int x, int y, int flags, void* userData)
 	*((double*)userData) = getDistance(pre_pt, cur_pt);
 }
 
-void on_mouse_measurements(int event, int x, int y, int flags, void* ustc)
+void on_mouse_measurements(int event, int x, int y, int flags, void* userData)
 {
+	Mat src;
 	static Point pre_pt;
 	static Point cur_pt;
 	char temp_1[20];
@@ -138,43 +149,22 @@ void on_mouse_measurements(int event, int x, int y, int flags, void* ustc)
 	{
 		dst.copyTo(src);
 		pre_pt = Point(x, y);
-		sprintf_s(temp_1, "x:%d,y:%d", x, y);
-
-		putText(src, temp_1, Point(x, y), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255));
 		circle(src, pre_pt, 0.5, cvScalar(255, 0, 0), CV_FILLED, CV_AA, 0);
-		imshow("Live Camera", src);
+		imshow("Measurements", src);
 	}
 
-	else if (event == EVENT_MOUSEMOVE && (flags & EVENT_FLAG_LBUTTON))
+	else if ((event == EVENT_MOUSEMOVE && (flags & EVENT_FLAG_LBUTTON))||event== EVENT_LBUTTONUP)
 	{
 		dst.copyTo(src);
 		cur_pt = Point(x, y);
-		sprintf_s(temp_2, "x:%d,y:%d", x, y);
-
-		putText(src, temp_2, Point(x, y), FONT_HERSHEY_SIMPLEX, 0.5, cvScalar(0, 255, 255));
 		line(src, pre_pt, cur_pt, cvScalar(0, 255, 0), 1, CV_AA, 0);
-		imshow("Live Camera", src);
-	}
-
-	else if (event == CV_EVENT_LBUTTONUP)
-	{
-
-		dst.copyTo(src);
-		cur_pt = Point(x, y);
 		double dist = getDistance(pre_pt, cur_pt);
+		double ratio = *((double*)userData);
+		sprintf_s(temp_1, "%f mm", ratio*dist);
 
-
-		sprintf_s(temp_2, "x:%d,y:%d", x, y);
-
-
-		putText(src, temp_2, Point(x, y), FONT_HERSHEY_SIMPLEX, 0.4, Scalar(0, 255, 255));
-
-		circle(src, cur_pt, 3, cvScalar(255, 0, 0), CV_FILLED, CV_AA, 0);
-		line(src, pre_pt, cur_pt, cvScalar(0, 255, 0), 1, CV_AA, 0);
-		imshow("Live Camera", src);
+		cv::putText(src, temp_1, (pre_pt+cur_pt)/2, FONT_HERSHEY_SIMPLEX, 0.4, CvScalar(0, 255, 0));
+		imshow("Measurements", src);
 	}
-	//double dist = getDistance(pre_pt, cur_pt);
-
 }
 
 
